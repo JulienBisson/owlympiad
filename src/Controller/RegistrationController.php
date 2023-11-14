@@ -16,12 +16,18 @@ class RegistrationController extends AbstractController
     #[Route('/register', name: 'app_register')]
     public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
     {
+        // Création d'une nouvelle instance de la classe User
         $user = new User();
+
+        // Création du formulaire et association avec l'objet utilisateur $user
         $form = $this->createForm(RegistrationFormType::class, $user);
+
+        // Gestion de la requête pour que le formulaire traite les données soumises
         $form->handleRequest($request);
 
+        // Vérification si le formulaire a été soumis et s'il est valide
         if ($form->isSubmitted() && $form->isValid()) {
-            // encode the plain password
+            // Hachage du mot de passe en utilisant le service UserPasswordHasherInterface
             $user->setPassword(
                 $userPasswordHasher->hashPassword(
                     $user,
@@ -29,13 +35,17 @@ class RegistrationController extends AbstractController
                 )
             );
 
+            // Enregistrement de l'objet utilisateur dans l'unité de travail de l'entité (EntityManager)
             $entityManager->persist($user);
-            $entityManager->flush();
-            // do anything else you need here, like send an email
 
+            // Exécution des opérations d'insertion, de mise à jour ou de suppression dans la base de données
+            $entityManager->flush();
+
+            // Redirection vers la route 'app_login' après une inscription réussie
             return $this->redirectToRoute('app_login');
         }
 
+        // Si le formulaire n'est pas soumis ou s'il n'est pas valide, rend la vue avec le formulaire et ses erreurs éventuelles
         return $this->render('registration/register.html.twig', [
             'registrationForm' => $form->createView(),
         ]);
